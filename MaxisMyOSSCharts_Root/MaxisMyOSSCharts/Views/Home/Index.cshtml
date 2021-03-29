@@ -1,0 +1,275 @@
+﻿@{
+    ViewBag.Title = "MyOSS Cases";
+}
+<link href="~/Scripts/DataTables-1.10.16/css/jquery.dataTables.min.css" rel="stylesheet" />
+<link href="~/Scripts/DataTables-1.10.16/css/dataTables.jqueryui.min.css" rel="stylesheet" />
+<script src="@Url.Content("~/Scripts/jquery-3.2.1.min.js")"></script>
+<script src="@Url.Content("~/Scripts/Highcharts/highcharts.js")"></script>
+<script src="@Url.Content("~/Scripts/Highcharts/series-label.js")"></script>
+<script src="@Url.Content("~/Scripts/DataTables-1.10.16/js/jquery.dataTables.min.js")"></script>
+<script src="@Url.Content("~/Scripts/DataTables-1.10.16/js/dataTables.jqueryui.min.js")"></script>
+<div class="container">
+    <div class="row">
+        <div class="col-lg-12">
+            <h4 class="page-header">
+                MyOSS Cases
+            </h4>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="col-sm-12">
+                <div id="Chart1" style="min-width: 400px; height: 400px; margin: 0 auto"></div>
+                <input type="hidden" id="fromWeekNo" />
+                   <input type="hidden" id="ApplicationWeekNO" value="@ViewBag.ApplicationWeekNO"/>
+                <input type="hidden" id="toWeekNo" />
+                <a id="aPrev" class="btn btn-default pull-left" onclick="return jsLoadData('PREV')"><i class="glyphicon glyphicon-chevron-left"></i> Prev</a>
+                <a id="aNext" class="btn btn-default pull-right" onclick="return jsLoadData('NEXT')">Next <i class="glyphicon glyphicon-chevron-right"></i></a>
+            </div>
+            <div class="col-sm-12">
+                <table id="tbl1" class="display" cellspacing="0" width="100%"></table>
+            </div>
+
+            <script type="text/javascript">
+                $(document).ready(function () {
+                    jsLoadData("");
+                });
+
+                function jsLoadData(loadFor) {
+                    var PassingParam = {};
+                    PassingParam.Param1 = loadFor;
+                    if (loadFor == "NEXT")
+                        PassingParam.Param2 = $('#toWeekNo').val();
+                    else if (loadFor == "PREV")
+                        PassingParam.Param2 = $('#fromWeekNo').val();
+                    var baseUrl = '@Url.Content("~/")';
+                    $.ajax({
+                        url: baseUrl + 'api/ChartData/CaseResolutionData/',
+                        type: 'POST',
+                        data: JSON.stringify(PassingParam),
+                        contentType: "application/json; charset=utf-8",
+                        success: function (data, textStatus, xhr) {
+                            if (data == null) {
+                                alert("Error in Data Retrieving. Please Contact Support.")
+                            }
+                            else {
+                                if (data["ChartData"] != null && data["ChartData"].length > 0) {
+                                    Highcharts.chart('Chart1', {
+                                        chart: {
+                                            zoomType: 'xy'
+                                        },
+                                        title: {
+                                            text: ''
+                                        },
+                                        xAxis: [{
+                                            categories: eval(data["ChartData"][0].WeekDesc), 
+                                            crosshair: true,
+                                            labels: {
+                                                style: {
+                                                    color: '#000000'
+                                                }
+                                            }
+                                        }],
+                                        yAxis: [{
+                                            gridLineWidth: 0,
+                                            title: {
+                                                text: 'Case',
+                                                style: {
+                                                    color: Highcharts.getOptions().colors[0]
+                                                }
+                                            },
+                                            labels: {
+                                                format: '{value}',
+                                                style: {
+                                                    color: '#000000'
+                                                }
+                                            }
+
+                                        }, { // Secondary yAxis
+                                            gridLineWidth: 0,
+                                            min: 0,
+                                            max: 100,
+                                            tickInterval: 20,
+                                            title: {
+                                                text: 'Closed SLA YTD %',
+                                                style: {
+                                                    color: Highcharts.getOptions().colors[1]
+                                                }
+                                            },
+                                            labels: {
+                                                format: '{value} %',
+                                                style: {
+                                                    color: '#000000'
+                                                }
+                                            },
+                                            opposite: true
+                                        }],
+                                        tooltip: {
+                                            shared: true
+                                        },
+                                        legend: {
+                                            layout: 'horizontal',
+                                            align: 'center',
+                                            x: 50,
+                                            verticalAlign: 'top',
+                                            y: 0,
+                                            floating: false,
+                                            backgroundColor: (Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF'
+                                        },
+                                        series: [{
+                                            name: 'Level 1',
+                                            type: 'column',
+                                            yAxis: 0, point: {
+                                                events: {
+                                                    click: function (e) {
+                                                        debugger 
+                                                        var clicked = this; 
+                                                        var WeekNo = clicked.category;
+                                                        setTimeout(function () {
+                                                            debugger 
+                                                            window.location.href = baseUrl + 'Home/Application?WeekNo=' + WeekNo;
+                                                        }, 500)
+                                                        e.preventDefault();
+                                                    }
+                                                }
+                                            },
+                                            data: eval(data["ChartData"][0].Level1),
+                                            color: '#336699',
+                                            dataLabels: {
+                                                enabled: true
+                                            }
+                                        }, {
+                                            name: 'Level 2',
+                                            type: 'column',
+                                            yAxis: 0,
+                                            point: {
+                                                events: {
+                                                    click: function (e) {
+                                                        debugger
+                                                        var clicked = this;
+                                                        var WeekNo = clicked.category;
+                                                        setTimeout(function () {
+                                                            debugger
+                                                            window.location.href = baseUrl + 'Home/Application?WeekNo=' + WeekNo;
+                                                        }, 500)
+                                                        e.preventDefault();
+                                                    }
+                                                }
+                                            },
+                                            data: eval(data["ChartData"][0].Level2),
+                                            color: '#800000',
+                                            dataLabels: {
+                                                enabled: true
+                                            }
+                                        }, {
+                                            name: 'Level 3',
+                                            type: 'column',
+                                            yAxis: 0,
+                                            point: {
+                                                events: {
+                                                    click: function (e) {
+                                                        debugger
+                                                        var clicked = this;
+                                                        var WeekNo = clicked.category;
+                                                        setTimeout(function () {
+                                                            debugger
+                                                            window.location.href = baseUrl + 'Home/Application?WeekNo=' + WeekNo;
+                                                        }, 500)
+                                                        e.preventDefault();
+                                                    }
+                                                }
+                                            },
+                                            data: eval(data["ChartData"][0].Level3),
+                                            color: '#336600',
+                                            dataLabels: {
+                                                enabled: true
+                                            }
+                                        }, {
+                                            name: 'Level 4',
+                                            type: 'column',
+                                            yAxis: 0,
+                                            point: {
+                                                events: {
+                                                    click: function (e) {
+                                                        debugger
+                                                        var clicked = this;
+                                                        var WeekNo = clicked.category;
+                                                        setTimeout(function () {
+                                                            debugger
+                                                            window.location.href = baseUrl + 'Home/Application?WeekNo=' + WeekNo;
+                                                        }, 500)
+                                                        e.preventDefault();
+                                                    }
+                                                }
+                                            },
+                                            data: eval(data["ChartData"][0].Level4),
+                                            color: '#660066',
+                                            dataLabels: {
+                                                enabled: true
+                                            }
+                                        }, {
+                                            name: 'Level 1 & 2 -Closed within SLA YTD %',
+                                            yAxis: 1,
+                                            label: {
+                                                enabled: false
+                                            },
+                                            data: eval(data["ChartData"][0].YTDPerc),
+                                            color: '#ff0000',
+                                            marker: {
+                                                enabled: false
+                                            },
+                                            dataLabels: {
+                                                enabled: true,
+                                                formatter: function () {
+                                                    return this.y + ' %';
+                                                }
+                                            }
+                                        }]
+                                    });
+                                }
+                                if (data["TableHeader"] != null) {
+                                    $('#tbl1').DataTable({
+                                        destroy: true,
+                                        bFilter: false,
+                                        aaSorting: false,
+                                        bPaginate: false,
+                                        bInfo: false,
+                                        aoColumnDefs: [
+                                            { bSortable: false, aTargets: ["_all"] }
+                                        ],
+                                        columns: data["TableHeader"],
+                                        data: data["TableData"],
+                                        fnRowCallback: function (nRow, aData, iDisplayIndex, iDisplayIndexFull) {
+                                            if (iDisplayIndex == 6) {
+                                                $('td', nRow).css({ 'background-color': '#0099ff', 'padding': '3px' });
+                                            }
+                                        }
+                                    });
+                                }
+                                if (data["NextPrevData"] != null && data["NextPrevData"].length > 0) {
+                                    $('#fromWeekNo').val(data["NextPrevData"][0].FromWeekNo);
+                                    $('#toWeekNo').val(data["NextPrevData"][0].ToWeekNo);
+
+                                    if (data["NextPrevData"][0].ShowPrev == "Y")
+                                        $('#aPrev').removeClass('hide').addClass('show');
+                                    else if (data["NextPrevData"][0].ShowPrev == "N")
+                                        $('#aPrev').removeClass('show').addClass('hide');
+
+                                    if (data["NextPrevData"][0].ShowNext == "Y")
+                                        $('#aNext').removeClass('hide').addClass('show');
+                                    else if (data["NextPrevData"][0].ShowNext == "N")
+                                        $('#aNext').removeClass('show').addClass('hide');
+                                }
+                            }
+                        },
+                        error: function (xhr, textStatus, errorThrown) {
+                            console.log('Error in Database', textStatus);
+                            console.log('errorThrown', errorThrown);
+                            console.log('xhr', xhr);
+                        }
+                    });
+                }
+            </script>
+        </div>
+    </div>
+</div>
